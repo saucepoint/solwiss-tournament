@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "../SwissTournament.sol";
+import "../../src/SwissTournament.sol";
 import "./Game.sol";
 
 contract GameSwissTournament is SwissTournament {
