@@ -2,13 +2,13 @@
 pragma solidity ^0.8.13;
 
 import "../../src/SwissTournament.sol";
-import "./Game.sol";
+import "./MockGame.sol";
 
-contract GameSwissTournament is SwissTournament {
-    Game game;
+contract MockGameSwissTournament is SwissTournament {
+    MockGame game;
     
-    constructor(Game _game) {
-        game = _game;
+    constructor(address _game) {
+        game = MockGame(_game);
 
         // after contract deploys/initializes
         // you should call newTournament() to initialize the tournament
@@ -18,7 +18,7 @@ contract GameSwissTournament is SwissTournament {
 
     /// @dev take note of the advancePlayers modifier
     ///      the modifier will update the swiss tournament logic for you
-    function playMatch(ResultCounter calldata group, uint256 matchIndex) public override advancePlayers(group, matchIndex) {
+    function playMatch(ResultCounter memory group, uint256 matchIndex) public override advancePlayers(group, matchIndex) {
         // modifier will validate that the match has not yet been played
         Match storage matchup = matches[group.wins][group.losses][matchIndex];
         

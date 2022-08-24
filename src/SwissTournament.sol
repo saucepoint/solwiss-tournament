@@ -39,8 +39,8 @@ abstract contract SwissTournament {
 
     // TODO: what happens when the win condition is higher? what does the swiss lattice look like?
     // typically both are the same
-    uint256 public winnerThreshold;  // number of wins required to "win" or "advance into playoffs"
-    uint256 public eliminationThreshold;  // number of losses suffered to be eliminated
+    uint256 public winnerThreshold = 3;  // number of wins required to "win" or "advance into playoffs"
+    uint256 public eliminationThreshold = 3;  // number of losses suffered to be eliminated
     
     // playerId => current scores
     mapping(uint256 => ResultCounter) public outcomes;
@@ -68,7 +68,7 @@ abstract contract SwissTournament {
     // TODO: YOU SHOULD MODIFY YOUR IMPLEMENTATION WITH advancePlayers() modifier
     // the modifier will ensure the match has not yet been played
     // the modifier will execute your logic and then advance the players to the next group
-    function playMatch(ResultCounter calldata group, uint256 matchIndex) public virtual;
+    function playMatch(ResultCounter memory group, uint256 matchIndex) public virtual;
 
     // ordered list of players by elo
     // playerIds[0] is matched against playerIds[playerIds.length - 1]
@@ -78,29 +78,60 @@ abstract contract SwissTournament {
         require(0 < playerIds.length && playerIds.length % 2 == 0, "Must have an even number of players");
 
         // initialize the starting group (0 wins, 0 loses)
-        uint256 i;
+        
+        // we'll seed the first match manually
+        // this is an optimization so we dont have an conditional check
+        // for matchBookTail = 0 in `_addMatchToQueue()`
+        // Removing the check (which only ever runs once) less gas for all _addMatchToQueue() calls
+        
+        uint256 matchIndex = groupMatchLength[0][0];
+        Match storage nextMatchup = matches[0][0][matchIndex];
+        nextMatchup.player0 = playerIds[0];
+        nextMatchup.player1 = playerIds[playerIds.length - 1];
+        unchecked { groupMatchLength[0][0]++; }
+        matchBook[matchBookTail] = MatchId(ResultCounter(0, 0), matchIndex);
+        
+        // assign the remaining matchups i.e. indexes (1, 14) (2, 13) (3, 12) (4, 11) (5, 10) (6, 9) (7, 8)
+        uint256 i = 1;
         uint256 half = playerIds.length / 2;
         uint256 player0;
         uint256 player1;
-        Match memory matchup;
-        ResultCounter memory group;  // defaulted as ResultCounter(0, 0);
         for (i; i < half; i++) {
             player0 = playerIds[i];
             player1 = playerIds[playerIds.length - 1 - i];
             require(player0 != 0, "PlayerId cannot be 0");
             require(player1 != 0, "PlayerId cannot be 0");
-            matchup = Match(player0, player1, 0, false);
             
-            // add the match to the match queue
-            _addMatchToQueue(group, i);
-
+            _addPlayerToNextMatch(player0);
+            _addPlayerToNextMatch(player1);
         }
     }
 
+    function playNextMatch() public {
+        MatchId memory matchId = matchBook[matchBookHead];
+        playMatch(matchId.group, matchId.matchIndex);
+        matchBookHead++;
+    }
 
+    
     // //////////////////////////////////
     // ----- View Functions -----
     // //////////////////////////////////
+
+    function eliminated(uint256 playerId) public view returns (bool) {
+        return outcomes[playerId].losses == eliminationThreshold;
+    }
+    
+    // TODO: for some reason tests didnt have access to implicit getters. look into why?
+    // i.e. tournament.match(uint256,uin256, uin256) -> Match
+    function getMatch(uint256 wins, uint256 losses, uint256 matchIndex) public view returns (Match memory) {
+        return matches[wins][losses][matchIndex];
+    }
+
+    function getNextMatch() public view returns (MatchId memory) {
+        MatchId memory matchId = matchBook[matchBookHead];
+        return matchId;
+    }
 
 
     // //////////////////////////////////
@@ -113,7 +144,7 @@ abstract contract SwissTournament {
     }
 
     function _addPlayerToNextMatch(uint256 playerId) private {
-        ResultCounter storage result = outcomes[playerId];
+        ResultCounter memory result = outcomes[playerId];
         
         // player has completed all possible matches and cannot advance further
         if (result.wins == winnerThreshold) return;
@@ -145,7 +176,7 @@ abstract contract SwissTournament {
     // 'decorates' the playMatch function
     // verifies that the given match has not yet been played
     // also reads the outcome of the state and advances the players to the next group
-    modifier advancePlayers(ResultCounter calldata group, uint256 matchIndex) {
+    modifier advancePlayers(ResultCounter memory group, uint256 matchIndex) {
         Match storage matchup = matches[group.wins][group.losses][matchIndex];
         require(!matchup.played, "Match has already been played");
         // play the match
