@@ -57,9 +57,18 @@ abstract contract SwissTournament {
     uint256 public matchBookHead;
     uint256 public matchBookTail;
 
+
     // ////////////////////////////////////////////////////
     // ----- Tournament Management (Write) Functions -----
     // ////////////////////////////////////////////////////
+    
+    /// @dev Play a match between two players
+    /// @param group Tuple(uint256, uint256) representing the group the match is in
+    /// @param matchIndex The index of the match in the group. 0 = first match in the group
+    // TODO: YOU SHOULD MODIFY YOUR IMPLEMENTATION WITH advancePlayers() modifier
+    // the modifier will ensure the match has not yet been played
+    // the modifier will execute your logic and then advance the players to the next group
+    function playMatch(ResultCounter calldata group, uint256 matchIndex) public virtual;
 
     // ordered list of players by elo
     // playerIds[0] is matched against playerIds[playerIds.length - 1]
@@ -78,6 +87,8 @@ abstract contract SwissTournament {
         for (i; i < half; i++) {
             player0 = playerIds[i];
             player1 = playerIds[playerIds.length - 1 - i];
+            require(player0 != 0, "PlayerId cannot be 0");
+            require(player1 != 0, "PlayerId cannot be 0");
             matchup = Match(player0, player1, 0, false);
             
             // add the match to the match queue
@@ -86,17 +97,11 @@ abstract contract SwissTournament {
         }
     }
 
-    /// @dev Play a match between two players
-    /// @param group Tuple(uint256, uint256) representing the group the match is in
-    /// @param matchIndex The index of the match in the group. 0 = first match in the group
-    // TODO: YOU SHOULD MODIFY YOUR IMPLEMENTATION WITH advancePlayers() modifier
-    // the modifier will ensure the match has not yet been played
-    // the modifier will execute your logic and then advance the players to the next group
-    function playMatch(uint256 tournamentId, ResultCounter calldata group, uint256 matchIndex) public virtual;
 
     // //////////////////////////////////
     // ----- View Functions -----
     // //////////////////////////////////
+
 
     // //////////////////////////////////
     // ----- Private Functions -----
@@ -125,9 +130,13 @@ abstract contract SwissTournament {
             _addMatchToQueue(result, matchIndex);
         } else {
             nextMatchup.player1 = playerId;
+            
+            // matchup has been filled so advance the pointer to the next matchup
+            // for subsequent matches
             unchecked { groupMatchLength[result.wins][result.losses]++; }
         }
     }
+
 
     // //////////////////////////////////
     // ----- Modifiers -----
