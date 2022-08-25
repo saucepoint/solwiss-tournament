@@ -3,6 +3,8 @@
 
 I'm welcoming improvements and suggestions. Open up an issue or [DM me](https://twitter.com/saucepoint)
 
+You can see the outstanding work [here](#this-is-a-reference-implementation-thats-still-being-worked-on)
+
 ---
 
 # solwiss-tournament
@@ -20,6 +22,17 @@ Inspired by [0xMonaco](https://0xmonaco.ctf.paradigm.xyz/) & the future of chain
 
 ![swisstournament](imgs/csgoswiss.png)
 
+
+### Additional Notes on Swiss Tournaments:
+
+* Swiss tournaments cannot identify a single winner
+    * Swiss tournaments should wittle down the contestant pool, and winners should move onto single-elimination brackets
+* Contestants may advance to a group where there are no other contestants. For example -- a contestant will go undefeated, and there are no other contestants that share the same win-loss record
+
+* Outcomes of a swiss tournament can yield a set of winners which do not play nicely into brackets (2^x). For example, if there are 10 winners of a swiss tournament, some winners will need to have a "bye" in playoffs.
+
+Please see [Example Configuration](#example-configurations) for possible outcomes of a Swiss tournament
+
 ---
 
 *Created with [foundry](https://book.getfoundry.sh)*
@@ -29,7 +42,7 @@ Inspired by [0xMonaco](https://0xmonaco.ctf.paradigm.xyz/) & the future of chain
 
 * Gas optimizations
 
-* Permissioned functions. Currently functions are unprotected. Eventually only 'tournament organizers' will have permissions to run matches
+* Permissioned functions. Current functions are unprotected. Eventually only 'tournament organizers' will have permission to run matches
 
 * Haven't really thought of reentrancy bugs, so there's probably something out there
 
@@ -47,9 +60,17 @@ Please see [MockGameSwissTournament.sol](test/mocks//MockGameSwissTournament.sol
 ```typescript
 /// >> Inherit `SwissTournament`
 contract MockGameSwissTournament is SwissTournament {
+
+    constructor(uint256 _winThreshold, uint256 _eliminationThreshold)
+        SwissTournament(_winThreshold, _eliminationThreshold)
+    {
+        // either in the constructor, or after deploy, seed the tournament with:
+        // newTournament(uint256[] playerIds);
+    }
     
+    /// >> Implement playMatch() function body to adhere to SwissTournament
+    /// >> Must decorate it with advancePlayers() modifier
     function playMatch(ResultCounter memory group, uint256 matchIndex) public override advancePlayers(group, matchIndex) {
-        /// >> Implement playMatch() function body
         
         /// >> Provides information on which players (uint256s) are participating in the matchup
         Match storage matchup = matches[group.wins][group.losses][matchIndex];
@@ -86,6 +107,10 @@ const contract = new ethers.Contract(CONTRACT_ADDR, abi.abi, provider);
 contract.playNextMatch();
 ```
 
+#### Identifying Winners
+
+TBD
+
 Lastly, check out [ISwissTournament](src/interfaces/ISwissTournament.sol) for view functions which provide everything that's needed for displaying the Swiss lattice on a UI.
 
 ---
@@ -93,6 +118,8 @@ Lastly, check out [ISwissTournament](src/interfaces/ISwissTournament.sol) for vi
 ## Example Configurations
 
 Pruned Results from [SwissTournament.t.sol:testGenerateCombinations()](test/SwissTournament.t.sol)
+
+Note: with high `win_thresholds`, it is not guaranteed that a "winner" (non-eliminated) has met the win-condition. This observation is due to contestants advancing into groups which do not have opponents to play.
 
 ```
 |num_players|win_threshold|lose_threshold|num_groups|num_matches|num_winners|num_losers|
