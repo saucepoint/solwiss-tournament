@@ -87,11 +87,13 @@ const contract = new ethers.Contract(CONTRACT_ADDR, abi.abi, provider);
 
 // add contestants (via their uint256-player-ID) to the tournament
 // ordered list by elo. First player (the best) matches against the last player (the worst) in the list
+// these can be arbitrary playerIds as long as theyre ints and NOT ZERO
+// an even amount of players is required, but is unbounded. Massive 128-contestant Swiss tournaments are possible
 contract.newTournament([
     10, 20, 30, 40,
     50, 60, 70, 80,
-    90, 10, 11, 12,
-    13, 14, 15, 16
+    90, 100, 110, 120,
+    130, 140, 150, 160
 ]);
 
 contract.playNextMatch();
