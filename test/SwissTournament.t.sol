@@ -176,14 +176,6 @@ contract SwissTournamentTest is Test {
         assertEq(matchup.player0 == loserId, true);
     }
 
-    /// verify that we can invoke playMatch via calldata
-    function testPlayMatchCallData() public {
-        ResultCounter memory group;  // default ResultCounter(0, 0)
-        for (uint256 i = 0; i < 8; i++) {
-            tournament.playMatchCalldata(group, i);
-        }
-    }
-
     
     // ------ Helper Functions ------
 

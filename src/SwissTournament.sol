@@ -74,9 +74,11 @@ abstract contract SwissTournament {
     // the modifier will execute your logic and then advance the players to the next group
     function playMatch(ResultCounter memory group, uint256 matchIndex) public virtual;
 
-    /// @dev Optimized for L2 calls, which benefit from calldata compression
-    function playMatchCalldata(ResultCounter calldata group, uint256 matchIndex) public virtual {
-        playMatch(group, matchIndex);
+    /// @dev Called by tournament organizers to run the matchups in order
+    function playNextMatch() public {
+        require(matchBookHead <= matchBookTail, "Match book is empty");
+        MatchId memory matchId = matchBook[matchBookHead];
+        playMatch(matchId.group, matchId.matchIndex);
         matchBookHead++;
     }
 
@@ -115,13 +117,6 @@ abstract contract SwissTournament {
             _addPlayerToNextMatch(player0);
             _addPlayerToNextMatch(player1);
         }
-    }
-
-    function playNextMatch() public {
-        require(matchBookHead <= matchBookTail, "Match book is empty");
-        MatchId memory matchId = matchBook[matchBookHead];
-        playMatch(matchId.group, matchId.matchIndex);
-        matchBookHead++;
     }
 
     
