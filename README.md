@@ -42,8 +42,6 @@ Please see [Example Configuration](#example-configurations) for possible outcome
 ## This is a **reference implementation** with stuff still being worked on:
 * Factory Contract, spins up new tournaments with ease
 
-* Flexible win/elimination thresholds (currently set to 3)
-
 * Permissioned functions. Current functions are unprotected. Eventually only 'tournament organizers' will have permission to run matches
 
 * Gas optimizations
