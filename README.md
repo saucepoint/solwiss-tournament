@@ -7,7 +7,9 @@ I'm welcoming improvements and suggestions. Open up an issue or [DM me on twitte
 
 # solwiss-tournament
 
-Inspired by [0xMonaco](https://0xmonaco.ctf.paradigm.xyz/) & the future of chain-facilitated PvP games, I created a reference implementation for a Swiss tournament ([Wikipedia](https://en.wikipedia.org/wiki/Swiss-system_tournament)) manager in Solidity
+Inspired by [0xMonaco](https://0xmonaco.ctf.paradigm.xyz/) & the future of chain-facilitated PvP games, I created a reference implementation for a Swiss tournament manager in Solidity
+
+([Wikipedia](https://en.wikipedia.org/wiki/Swiss-system_tournament)) 
 
 > The Swiss system is used for competitions in which there are too many entrants for a full round-robin (all-play-all) to be feasible
 
