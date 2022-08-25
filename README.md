@@ -1,7 +1,7 @@
 # Woah there, anon! Thanks for snooping but
 *repo is not ready yet; feel free to poke around though* 😘
 
-I'm welcoming improvements and suggestions. Open up an issue or [DM me](https://twitter.com/saucepoint)
+I'm welcoming improvements and suggestions. Open up an issue or [DM me on twitter](https://twitter.com/saucepoint)
 
 ---
 
