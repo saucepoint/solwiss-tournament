@@ -184,7 +184,7 @@ abstract contract SwissTournament {
 
     // 'decorates' the playMatch function
     // verifies that the given match has not yet been played
-    // also reads the outcome of the state and advances the players to the next group
+    // also reads the outcome of the matchup and advances the players to the next group
     modifier advancePlayers(ResultCounter memory group, uint256 matchIndex) {
         Match storage matchup = matches[group.wins][group.losses][matchIndex];
         require(!matchup.played, "Match has already been played");
@@ -192,9 +192,10 @@ abstract contract SwissTournament {
         _;
         Match storage postMatchResult = matches[group.wins][group.losses][matchIndex];
 
-        // i could handle this automatically for playMatch(); but i want to be explicit
+        // i could handle this automatically; but i want to be explicit
         // and ensure the implementer is reading carefully :)
         require(postMatchResult.played, "Match was not set to played=true");
+        
         require(postMatchResult.winnerId != 0, "Match winner was not set");
         
         if (postMatchResult.winnerId == postMatchResult.player0) {
