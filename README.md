@@ -3,7 +3,7 @@
 
 I'm welcoming improvements and suggestions. Open up an issue or [DM me on twitter](https://twitter.com/saucepoint)
 
-You can see the outstanding work [here](#this-is-a-reference-implementation-thats-still-being-worked-on)
+You can find the outstanding work below
 
 ---
 
