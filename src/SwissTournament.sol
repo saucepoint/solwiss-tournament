@@ -70,6 +70,11 @@ abstract contract SwissTournament {
     // the modifier will execute your logic and then advance the players to the next group
     function playMatch(ResultCounter memory group, uint256 matchIndex) public virtual;
 
+    /// @dev Optimized for L2 calls, which benefit from calldata compression
+    function playMatchCalldata(ResultCounter calldata group, uint256 matchIndex) public virtual {
+        playMatch(group, matchIndex);
+    }
+
     // ordered list of players by elo
     // playerIds[0] is matched against playerIds[playerIds.length - 1]
     // Must be an even number of players
@@ -131,6 +136,10 @@ abstract contract SwissTournament {
     function getNextMatch() public view returns (MatchId memory) {
         MatchId memory matchId = matchBook[matchBookHead];
         return matchId;
+    }
+
+    function getOutcomes(uint256 playerId) public view returns (ResultCounter memory) {
+        return outcomes[playerId];
     }
 
 
