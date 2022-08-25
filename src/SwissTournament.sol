@@ -197,8 +197,7 @@ abstract contract SwissTournament {
         // i could handle this automatically; but i want to be explicit
         // and ensure the implementer is reading carefully :)
         require(postMatchResult.played, "Match was not set to played=true");
-        
-        //require(postMatchResult.winnerId != 0, "Match winner was not set");
+        require(postMatchResult.winnerId != 0, "Match winner was not set");
         
         if (postMatchResult.winnerId == postMatchResult.player0) {
             outcomes[postMatchResult.player0].wins++;
