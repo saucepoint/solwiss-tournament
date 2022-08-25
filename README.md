@@ -26,12 +26,14 @@ Inspired by [0xMonaco](https://0xmonaco.ctf.paradigm.xyz/) & the future of chain
 
 *Created with [foundry](https://book.getfoundry.sh)*
 
-## This is a **reference implementation** that's still being worked on:
+## This is a **reference implementation** with stuff still being worked on:
 * Factory Contract, spins up new tournaments with ease
 
-* Gas optimizations
+* Flexible win/elimination thresholds (currently set to 3)
 
 * Permissioned functions. Currently functions are unprotected. Eventually only 'tournament organizers' will have permissions to run matches
+
+* Gas optimizations
 
 * Haven't really thought of reentrancy bugs, so there's probably something out there
 
