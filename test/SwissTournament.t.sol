@@ -71,30 +71,22 @@ contract SwissTournamentTest is Test {
         assertEq(losers, 8);
     }
 
-    function testSimTournamentEntirely32() public {
-        game = new MockGame();
-        tournament = new MockGameSwissTournament(address(game), 11, 4);
+    /// Logs the matchups & groupings for an entire tournament
+    /// Useful for discovering optimal parameters of a tournament
+    function testTournamentGroupLog() public {
+        uint256 NUM_PLAYERS = 32;
+        uint256 WIN_THRESHOLD = 3;
+        uint256 ELIMINATION_THRESHOLD = 3;
+        
+        simTournament(NUM_PLAYERS, WIN_THRESHOLD, ELIMINATION_THRESHOLD);
 
-        // You can throw these CSV logs into Excel/Sheets/Numbers or a similar tool to visualize a race!
+        // Log results to a file
         string memory filepath = string.concat("logs/", vm.toString(address(tournament)), ".txt");
         vm.writeFile(filepath, "Groups\n");
-
-        uint256 NUM_PLAYERS = 256;
-        playerIds = new uint256[](0);
-        for(uint256 i = 1; i <= NUM_PLAYERS; i++) {
-            // player ids are [10, 20, ..., 150, 160]. Reduces confusion between playerId and index
-            playerIds.push(i * 10);
-        }
-        tournament.newTournament(playerIds);
-
-        // make sure theres no errors
-        while (tournament.matchBookHead() <= tournament.matchBookTail()) {
-            tournament.playNextMatch();
-        }
-
         for (uint256 wins=0; wins <= tournament.winnerThreshold(); wins++) {
             for (uint256 losses=0; losses <= tournament.eliminationThreshold(); losses++) {
                 uint256 len = tournament.groupMatchLength(wins, losses);
+                if (len == 0) continue;
                 vm.writeLine(
                     filepath,
                     string.concat("\n   ",
@@ -116,18 +108,47 @@ contract SwissTournamentTest is Test {
             }
         }
 
-        // loop over the 16 players. there should be 8 winners, and 8 losers
-        // confirms we arent double counting winners or losers
-        uint256 winners;
-        uint256 losers;
-        bool out;
-        for (uint256 i = 0; i < playerIds.length; i++) {
-            out = tournament.eliminated(playerIds[i]);
-            out ? losers++ : winners++;
-        }
-        emit log_uint(winners);
-        emit log_uint(losers);
+        (uint256 numGroups, uint256 numMatches, uint256 numWinners, uint256 numLosers) = getTournamentStats();
+        emit log_named_uint("numGroups", numGroups);
+        emit log_named_uint("numMatches", numMatches);
+        emit log_named_uint("numWinners", numWinners);
+        emit log_named_uint("numLosers", numLosers);
+        assertEq(numWinners + numLosers, NUM_PLAYERS);
     }
+
+    /// Generate a few differently parameterized swiss tournaments
+    /// Log the results
+    function testGenerateCombinations() public {
+        string memory filepath = string.concat("logs/", "tournamentCombinations.csv");
+        vm.writeFile(filepath, "num_players,win_threshold,lose_threshold,num_groups,num_matches,num_winners,num_losers\n");
+
+        uint256[9] memory numPlayers = [uint256(8), uint256(16), uint256(20), uint256(32), uint256(40), uint256(64), uint256(100), uint256(128), uint256(256)];
+
+        uint256 maxWins = 12;
+        uint256 maxLosses = 5;
+        for (uint256 i; i < numPlayers.length; i++) {
+            for (uint256 winThreshold = 3; winThreshold <= maxWins; winThreshold++) {
+                for (uint256 lossThreshold = 3; lossThreshold <= maxLosses; lossThreshold++) {
+                    // create a new tournament and simulate its entirety
+                    simTournament(numPlayers[i], winThreshold, lossThreshold);
+                    (uint256 numGroups, uint256 numMatches, uint256 numWinners, uint256 numLosers) = getTournamentStats();
+                    vm.writeLine(
+                        filepath,
+                        string.concat(
+                            vm.toString(numPlayers[i]), ",",
+                            vm.toString(winThreshold), ",",
+                            vm.toString(lossThreshold), ",",
+                            vm.toString(numGroups), ",",
+                            vm.toString(numMatches), ",",
+                            vm.toString(numWinners), ",",
+                            vm.toString(numLosers)
+                        )
+                    );
+                }
+            }
+        }
+    }
+
 
     /// Verify that the swiss-advancement logic is working correctly
     function testAdvancement() public {
@@ -160,6 +181,40 @@ contract SwissTournamentTest is Test {
         ResultCounter memory group;  // default ResultCounter(0, 0)
         for (uint256 i = 0; i < 8; i++) {
             tournament.playMatchCalldata(group, i);
+        }
+    }
+
+    
+    // ------ Helper Functions ------
+
+    function simTournament(uint256 numPlayers, uint256 winThreshold, uint256 lossThreshold) public {
+        game = new MockGame();
+        tournament = new MockGameSwissTournament(address(game), winThreshold, lossThreshold);
+        playerIds = new uint256[](0);
+        for(uint256 i = 1; i <= numPlayers; i++) {
+            // player ids are [10, 20, ..., 150, 160]. Reduces confusion between playerId and index
+            playerIds.push(i * 10);
+        }
+        tournament.newTournament(playerIds);
+        while (tournament.matchBookHead() <= tournament.matchBookTail()) {
+            tournament.playNextMatch();
+        }
+    }
+
+    function getTournamentStats() public view returns (uint256 numGroups, uint256 numMatches, uint256 numWinners, uint256 numLosers) {
+        for (uint256 wins=0; wins <= tournament.winnerThreshold(); wins++) {
+            for (uint256 losses=0; losses <= tournament.eliminationThreshold(); losses++) {
+                uint256 len = tournament.groupMatchLength(wins, losses);
+                if (0 < len) {
+                    numGroups++;
+                    numMatches += len;
+                }
+            }
+        }
+        bool out;
+        for (uint256 i = 0; i < playerIds.length; i++) {
+            out = tournament.eliminated(playerIds[i]);
+            out ? numLosers++ : numWinners++;
         }
     }
 }
