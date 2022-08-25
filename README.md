@@ -18,7 +18,7 @@ Inspired by [0xMonaco](https://0xmonaco.ctf.paradigm.xyz/) & the future of chain
 > In single-elimination tournaments, the best competitor may not necessarily win, because good competitors might have a bad day or eliminate and exhaust each other if they meet in early rounds.
 
 
-### Example:
+### Example of a Swiss tournament:
 
 ![swisstournament](imgs/csgoswiss.png)
 
