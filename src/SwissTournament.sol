@@ -39,8 +39,8 @@ abstract contract SwissTournament {
 
     // TODO: what happens when the win condition is higher? what does the swiss lattice look like?
     // typically both are the same
-    uint256 public winnerThreshold = 3;  // number of wins required to "win" or "advance into playoffs"
-    uint256 public eliminationThreshold = 3;  // number of losses suffered to be eliminated
+    uint256 public winnerThreshold;  // number of wins required to "win" or "advance into playoffs"
+    uint256 public eliminationThreshold;  // number of losses suffered to be eliminated
     
     // playerId => current scores
     mapping(uint256 => ResultCounter) public outcomes;
@@ -57,6 +57,10 @@ abstract contract SwissTournament {
     uint256 public matchBookHead;
     uint256 public matchBookTail;
 
+    constructor(uint256 _winThreshold, uint256 _eliminationThreshold) {
+        winnerThreshold = _winThreshold;
+        eliminationThreshold = _eliminationThreshold;
+    }
 
     // ////////////////////////////////////////////////////
     // ----- Tournament Management (Write) Functions -----
@@ -73,6 +77,7 @@ abstract contract SwissTournament {
     /// @dev Optimized for L2 calls, which benefit from calldata compression
     function playMatchCalldata(ResultCounter calldata group, uint256 matchIndex) public virtual {
         playMatch(group, matchIndex);
+        matchBookHead++;
     }
 
     // ordered list of players by elo
@@ -113,6 +118,7 @@ abstract contract SwissTournament {
     }
 
     function playNextMatch() public {
+        require(matchBookHead <= matchBookTail, "Match book is empty");
         MatchId memory matchId = matchBook[matchBookHead];
         playMatch(matchId.group, matchId.matchIndex);
         matchBookHead++;
@@ -187,6 +193,7 @@ abstract contract SwissTournament {
     // also reads the outcome of the matchup and advances the players to the next group
     modifier advancePlayers(ResultCounter memory group, uint256 matchIndex) {
         Match storage matchup = matches[group.wins][group.losses][matchIndex];
+        if (matchup.player1 == 0) return;
         require(!matchup.played, "Match has already been played");
         // play the match
         _;
@@ -196,7 +203,7 @@ abstract contract SwissTournament {
         // and ensure the implementer is reading carefully :)
         require(postMatchResult.played, "Match was not set to played=true");
         
-        require(postMatchResult.winnerId != 0, "Match winner was not set");
+        //require(postMatchResult.winnerId != 0, "Match winner was not set");
         
         if (postMatchResult.winnerId == postMatchResult.player0) {
             outcomes[postMatchResult.player0].wins++;

@@ -12,7 +12,7 @@ contract SwissTournamentTest is Test {
     
     function setUp() public {
         game = new MockGame();
-        tournament = new MockGameSwissTournament(address(game));
+        tournament = new MockGameSwissTournament(address(game), 3, 3);
         
         for(uint256 i = 1; i <= 16; i++) {
             // player ids are [10, 20, ..., 150, 160]. Reduces confusion between playerId and index
@@ -69,6 +69,64 @@ contract SwissTournamentTest is Test {
         }
         assertEq(winners, 8);
         assertEq(losers, 8);
+    }
+
+    function testSimTournamentEntirely32() public {
+        game = new MockGame();
+        tournament = new MockGameSwissTournament(address(game), 11, 4);
+
+        // You can throw these CSV logs into Excel/Sheets/Numbers or a similar tool to visualize a race!
+        string memory filepath = string.concat("logs/", vm.toString(address(tournament)), ".txt");
+        vm.writeFile(filepath, "Groups\n");
+
+        uint256 NUM_PLAYERS = 256;
+        playerIds = new uint256[](0);
+        for(uint256 i = 1; i <= NUM_PLAYERS; i++) {
+            // player ids are [10, 20, ..., 150, 160]. Reduces confusion between playerId and index
+            playerIds.push(i * 10);
+        }
+        tournament.newTournament(playerIds);
+
+        // make sure theres no errors
+        while (tournament.matchBookHead() <= tournament.matchBookTail()) {
+            tournament.playNextMatch();
+        }
+
+        for (uint256 wins=0; wins <= tournament.winnerThreshold(); wins++) {
+            for (uint256 losses=0; losses <= tournament.eliminationThreshold(); losses++) {
+                uint256 len = tournament.groupMatchLength(wins, losses);
+                vm.writeLine(
+                    filepath,
+                    string.concat("\n   ",
+                        vm.toString(wins), " : ",
+                        vm.toString(losses), " (",
+                        vm.toString(len), ")\n  ----------"
+                    )
+                );
+                for (uint256 i=0; i < len; i++) {
+                    Match memory matchup = tournament.getMatch(wins, losses, i);
+                    vm.writeLine(
+                        filepath,
+                        string.concat("   ",
+                            vm.toString(matchup.player0), " : ",
+                            vm.toString(matchup.player1)
+                        )
+                    );
+                }
+            }
+        }
+
+        // loop over the 16 players. there should be 8 winners, and 8 losers
+        // confirms we arent double counting winners or losers
+        uint256 winners;
+        uint256 losers;
+        bool out;
+        for (uint256 i = 0; i < playerIds.length; i++) {
+            out = tournament.eliminated(playerIds[i]);
+            out ? losers++ : winners++;
+        }
+        emit log_uint(winners);
+        emit log_uint(losers);
     }
 
     /// Verify that the swiss-advancement logic is working correctly

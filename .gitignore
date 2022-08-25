@@ -1,4 +1,5 @@
 out
 cache
+logs
 .env
 .DS_Store
