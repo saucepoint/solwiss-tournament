@@ -7,7 +7,9 @@ import "./MockGame.sol";
 contract MockGameSwissTournament is SwissTournament {
     MockGame game;
     
-    constructor(address _game) {
+    constructor(address _game, uint256 _winThreshold, uint256 _eliminationThreshold)
+        SwissTournament(_winThreshold, _eliminationThreshold)
+    {
         game = MockGame(_game);
 
         // after contract deploys/initializes
