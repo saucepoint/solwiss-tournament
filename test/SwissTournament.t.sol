@@ -2,24 +2,24 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
+import "./lib.sol";
 import "./mocks/MockGame.sol";
+
+import "../src/interfaces/IMatchResolver.sol";
 import "../src/SwissTournament.sol";
 import "../src/SwissTournamentManager.sol";
 
 contract SwissTournamentTest is Test {
-    MockGame game;
-    MockGameSwissTournament tournament;
+    IMatchResolver game;
+    SwissTournamentManager tournament;
     uint256[] playerIds;
     
     function setUp() public {
-        game = new MockGame();
-        tournament = new MockGameSwissTournament(address(game), 3, 3);
-        
-        for(uint256 i = 1; i <= 16; i++) {
-            // player ids are [10, 20, ..., 150, 160]. Reduces confusion between playerId and index
-            playerIds.push(i * 10);
-        }
-        tournament.newTournament(playerIds);
+        MockGame mockGame = new MockGame();
+        game = IMatchResolver(address(mockGame));
+
+        playerIds = TournamentLibrary.getPlayerIds(16);
+        tournament = new SwissTournamentManager(address(game), 3, 3, playerIds);
     }
 
     /// Verify the first set of matchups were setup correctly
@@ -61,6 +61,7 @@ contract SwissTournamentTest is Test {
 
         // loop over the 16 players. there should be 8 winners, and 8 losers
         // confirms we arent double counting winners or losers
+        // TODO: use helper function
         uint256 winners;
         uint256 losers;
         bool out;
@@ -78,8 +79,10 @@ contract SwissTournamentTest is Test {
         uint256 NUM_PLAYERS = 32;
         uint256 WIN_THRESHOLD = 3;
         uint256 ELIMINATION_THRESHOLD = 3;
-        
-        simTournament(NUM_PLAYERS, WIN_THRESHOLD, ELIMINATION_THRESHOLD);
+
+        playerIds = TournamentLibrary.getPlayerIds(NUM_PLAYERS);
+        tournament = new SwissTournamentManager(address(game), WIN_THRESHOLD, ELIMINATION_THRESHOLD, playerIds);
+        TournamentLibrary.simTournament(tournament);
 
         // Log results to a file
         string memory filepath = string.concat("logs/", vm.toString(address(tournament)), ".txt");
@@ -131,7 +134,10 @@ contract SwissTournamentTest is Test {
             for (uint256 winThreshold = 3; winThreshold <= maxWins; winThreshold++) {
                 for (uint256 lossThreshold = 3; lossThreshold <= maxLosses; lossThreshold++) {
                     // create a new tournament and simulate its entirety
-                    simTournament(numPlayers[i], winThreshold, lossThreshold);
+                    playerIds = TournamentLibrary.getPlayerIds(numPlayers[i]);
+                    tournament = new SwissTournamentManager(address(game), winThreshold, lossThreshold, playerIds);
+                    TournamentLibrary.simTournament(tournament);
+                    
                     (uint256 numGroups, uint256 numMatches, uint256 numWinners, uint256 numLosers) = getTournamentStats();
                     vm.writeLine(
                         filepath,
@@ -156,7 +162,7 @@ contract SwissTournamentTest is Test {
         // play the matchup between playerId 10 and playerId 160
         tournament.playNextMatch();
 
-        uint256 winnerId = game.result(playerIds[0], playerIds[playerIds.length - 1]);
+        uint256 winnerId = game.matchup(playerIds[0], playerIds[playerIds.length - 1]);
         uint256 loserId = winnerId == playerIds[0] ? playerIds[playerIds.length - 1] : playerIds[0];
         
         // verify the scores:
@@ -179,21 +185,6 @@ contract SwissTournamentTest is Test {
 
     
     // ------ Helper Functions ------
-
-    function simTournament(uint256 numPlayers, uint256 winThreshold, uint256 lossThreshold) public {
-        game = new MockGame();
-        tournament = new MockGameSwissTournament(address(game), winThreshold, lossThreshold);
-        playerIds = new uint256[](0);
-        for(uint256 i = 1; i <= numPlayers; i++) {
-            // player ids are [10, 20, ..., 150, 160]. Reduces confusion between playerId and index
-            playerIds.push(i * 10);
-        }
-        tournament.newTournament(playerIds);
-        while (tournament.matchBookHead() <= tournament.matchBookTail()) {
-            tournament.playNextMatch();
-        }
-    }
-
     function getTournamentStats() public view returns (uint256 numGroups, uint256 numMatches, uint256 numWinners, uint256 numLosers) {
         for (uint256 wins=0; wins <= tournament.winnerThreshold(); wins++) {
             for (uint256 losses=0; losses <= tournament.eliminationThreshold(); losses++) {
