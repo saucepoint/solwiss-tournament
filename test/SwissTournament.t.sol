@@ -3,7 +3,8 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "./mocks/MockGame.sol";
-import "./mocks/MockGameSwissTournament.sol";
+import "../src/SwissTournament.sol";
+import "../src/SwissTournamentManager.sol";
 
 contract SwissTournamentTest is Test {
     MockGame game;

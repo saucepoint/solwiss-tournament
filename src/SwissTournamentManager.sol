@@ -1,25 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "../../src/SwissTournament.sol";
-import "./MockGame.sol";
+import "./SwissTournament.sol";
+import "./interfaces/IMatchResolver.sol";
 
-contract MockGameSwissTournament is SwissTournament {
-    MockGame game;
-    
-    constructor(address _game, uint256 _winThreshold, uint256 _eliminationThreshold)
-        SwissTournament(_winThreshold, _eliminationThreshold)
+/// @title Swiss tournament manager
+/// @author @saucepoint <saucepoint@protonmail.com>
+/// @notice Instances will be created by the factory. Assumes the provided contract adheres to IMatchResolver
+contract SwissTournamentManager is SwissTournament {
+    IMatchResolver matchResolver;
+
+    constructor(address _matchResolver, uint256 _winThreshold, uint256 _eliminationThreshold, uint256[] memory playerIds)
+        SwissTournament(_winThreshold, _eliminationThreshold, playerIds)
     {
-        game = MockGame(_game);
-
-        // after contract deploys/initializes
-        // you should call newTournament() to initialize the tournament
-        // this is because newTournament() takes in calldata (for the L2 compression baby!)
-        // and constructors dont accept calldata arrays :thonk:
+        matchResolver = IMatchResolver(_matchResolver);
     }
 
-    /// @dev take note of the advancePlayers modifier
-    ///      the modifier will update the swiss tournament logic for you
+    /// Implement SwissTournament.playMatch()
+    /// Must decorate with SwissTournament.advancePlayers() modifier
     function playMatch(ResultCounter memory group, uint256 matchIndex) public override advancePlayers(group, matchIndex) {
         // modifier will validate that the match has not yet been played
         Match storage matchup = matches[group.wins][group.losses][matchIndex];
@@ -27,7 +25,7 @@ contract MockGameSwissTournament is SwissTournament {
         // the game logic just needs to return the id (uint256) of the winner
         // the game logic can accept an arbitrary amount of parameters
         // however given 2 players, return the id of the winner!
-        uint256 winnerId = game.result(matchup.player0, matchup.player1);
+        uint256 winnerId = matchResolver.matchup(matchup.player0, matchup.player1);
 
         /// @dev Implementing playMatch() requires you to update the outcome of the match
         matchup.winnerId = winnerId;
