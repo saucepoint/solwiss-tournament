@@ -56,10 +56,13 @@ abstract contract SwissTournament {
     // indexer value for `matchBook`
     uint256 public matchBookHead;
     uint256 public matchBookTail;
+    uint256 public numPlayers;
 
-    constructor(uint256 _winThreshold, uint256 _eliminationThreshold) {
+    constructor(uint256 _winThreshold, uint256 _eliminationThreshold, uint256[] memory _playerIds) {
         winnerThreshold = _winThreshold;
         eliminationThreshold = _eliminationThreshold;
+        numPlayers = _playerIds.length;
+        _newTournament(_playerIds);
     }
 
     // ////////////////////////////////////////////////////
@@ -86,8 +89,10 @@ abstract contract SwissTournament {
     // playerIds[0] is matched against playerIds[playerIds.length - 1]
     // Must be an even number of players
     // playerId cannot be 0!!!!
-    function newTournament(uint256[] calldata playerIds) public {
+    function _newTournament(uint256[] memory playerIds) private {
         require(0 < playerIds.length && playerIds.length % 2 == 0, "Must have an even number of players");
+        require(playerIds[0] != 0, "PlayerIds cannot be 0");
+        require(playerIds[playerIds.length - 1] != 0, "PlayerIds cannot be 0");
 
         // initialize the starting group (0 wins, 0 loses)
         

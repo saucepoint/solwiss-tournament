@@ -40,7 +40,6 @@ Please see [Example Configuration](#example-configurations) for possible outcome
 *Created with [foundry](https://book.getfoundry.sh)*
 
 ## This is a **reference implementation** with stuff still being worked on:
-* Factory Contract, spins up new tournaments with ease
 
 * Permissioned functions. Current functions are unprotected. Eventually only 'tournament organizers' will have permission to run matches
 
@@ -55,7 +54,24 @@ forge install saucepoint/solwiss-tournament
 
 ---
 
-## Cookbook
+# Cookbook
+
+There are two ways of creating a SwissTournament:
+
+1) Roll-your-own contract by implementing `SwissTournament`
+    * offers more flexibility in managing additional state
+    * attach additional logic to `playMatch()` beyond just resolving for a winner
+
+2) Use the `SwissTournamentManagerFactory` to create a tournament via a transaction. This will deploy a new `SwissTournmanetManager`
+    * Requires your Game contract to implement the `IMatchResolver` interface
+    * Easily create and facilitate multiple SwissTournaments
+
+In either case, the base `SwissTournament` will handle:
+    * Advancing players up and down the lattice
+
+    * Maintain a first-in-first-out queue of matchups
+
+## Implementing `SwissTournament` (RYO)
 
 Please see [MockGameSwissTournament.sol](test/mocks//MockGameSwissTournament.sol) for additional context
 
@@ -87,11 +103,13 @@ contract MockGameSwissTournament is SwissTournament {
 }
 ```
 
-SwissTournament.sol handles:
+## Create a `SwissTournament` via a transaction
 
-1) Advancing players up and down the lattice
+SwissTournamentManagerFactory.sol handles:
 
-2) Maintains an *ordered* list of matchups
+* Creation of a tournament manager (SwissTournamentManager)
+    * SwissTournamentManager will call your Game contract's `.matchup(uint256,uint256)`
+    * i.e. your game contract must adhere to `IMatchResolver.sol` interface
 
 So all you need to do is call `playNextMatch()`
 ```typescript
@@ -100,24 +118,50 @@ So all you need to do is call `playNextMatch()`
 
 import { ethers } from "ethers";
 import { useAccount, useProvider, useSignMessage } from "wagmi";
-import abi from "../abi/YourContractOutput.json";
+import game from "../abi/YourGameContractOutput.json";
 
-const CONTRACT_ADDR = "0xABCDE"
+// you can retrieve ABI from etherscan, and save locally to React repo
+import factory from "../abi/SwissTournamentManagerFactory.json";
+import stm from "../abi/SwissTournamentManager.json";
+
+// deployed contract which implements IMatchResolver.sol
+const GAME_CONTRACT = "0xABCDE";
+const TOURNAMENT_FACTORY = "0xTOURNAMENT_FACTORY";
 const provider = useProvider();
-const contract = new ethers.Contract(CONTRACT_ADDR, abi.abi, provider);
+const tournamentCreatorContract = new ethers.Contract(TOURNAMENT_FACTORY, factory.abi, provider);
 
 // add contestants (via their uint256-player-ID) to the tournament
 // ordered list by elo. First player (the best) matches against the last player (the worst) in the list
 // these can be arbitrary playerIds as long as theyre ints and NOT ZERO
 // an even amount of players is required, but is unbounded. Massive 128-contestant Swiss tournaments are possible
-contract.newTournament([
+const playerIds: number[] = [
     10, 20, 30, 40,
     50, 60, 70, 80,
     90, 100, 110, 120,
     130, 140, 150, 160
-]);
+];
 
-contract.playNextMatch();
+// number of wins required to stop advancement
+const winThreshold = 3;
+
+// number of losses required to be eliminated
+const eliminationThreshold = 3;
+
+// create a tournament using the factory
+const newTournamentAddress = tournamentCreatorContract.create(
+    GAME_CONTRACT,
+    winThreshold,
+    eliminationThreshold,
+    playerIds
+);
+
+// get the tournament contract
+const tournament = new ethers.Contract(newTournamentAddress, stm.abi, provider);
+
+// Execute the entire tournament
+while (tournament.matchBookHead() <= contract.matchBookTail()){
+    tournament.playNextMatch();
+}
 ```
 
 #### Identifying Winners
@@ -132,7 +176,7 @@ Lastly, check out [ISwissTournament](src/interfaces/ISwissTournament.sol) for vi
 
 Pruned Results from [SwissTournament.t.sol:testGenerateCombinations()](test/SwissTournament.t.sol)
 
-Note: with high `win_thresholds`, it is not guaranteed that a "winner" (non-eliminated) has met the win-condition. This observation is due to contestants advancing into groups which do not have opponents to play.
+Note: with high `win_thresholds`, it is not guaranteed that a "winner" has met the win-condition. **Winners are defined as not being eliminated.** This observation is due to contestants advancing into groups which do not have opponents to play.
 
 ```
 |num_players|win_threshold|lose_threshold|num_groups|num_matches|num_winners|num_losers|
@@ -233,3 +277,6 @@ Note: with high `win_thresholds`, it is not guaranteed that a "winner" (non-elim
 |256        |11           |4             |40        |1006       |10         |246       |
 |256        |12           |4             |41        |1007       |9          |247       |
 ```
+
+## Glossary
+TBD
