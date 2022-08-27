@@ -19,7 +19,7 @@ contract SwissTournamentTest is Test {
         game = IMatchResolver(address(mockGame));
 
         playerIds = TournamentLibrary.getPlayerIds(16);
-        tournament = new SwissTournamentManager(address(game), 3, 3, playerIds);
+        tournament = new SwissTournamentManager(msg.sender, address(game), 3, 3, playerIds);
     }
 
     /// Verify the first set of matchups were setup correctly
@@ -56,7 +56,7 @@ contract SwissTournamentTest is Test {
 
         // make sure theres no errors
         for (uint256 i = 0; i < 33; i++) {
-            tournament.playNextMatch();
+            tournament.playNextMatch(0, 0, 0, 0);
         }
 
         // loop over the 16 players. there should be 8 winners, and 8 losers
@@ -81,7 +81,7 @@ contract SwissTournamentTest is Test {
         uint256 ELIMINATION_THRESHOLD = 3;
 
         playerIds = TournamentLibrary.getPlayerIds(NUM_PLAYERS);
-        tournament = new SwissTournamentManager(address(game), WIN_THRESHOLD, ELIMINATION_THRESHOLD, playerIds);
+        tournament = new SwissTournamentManager(msg.sender, address(game), WIN_THRESHOLD, ELIMINATION_THRESHOLD, playerIds);
         TournamentLibrary.simTournament(tournament);
 
         // Log results to a file
@@ -135,7 +135,7 @@ contract SwissTournamentTest is Test {
                 for (uint256 lossThreshold = 3; lossThreshold <= maxLosses; lossThreshold++) {
                     // create a new tournament and simulate its entirety
                     playerIds = TournamentLibrary.getPlayerIds(numPlayers[i]);
-                    tournament = new SwissTournamentManager(address(game), winThreshold, lossThreshold, playerIds);
+                    tournament = new SwissTournamentManager(msg.sender, address(game), winThreshold, lossThreshold, playerIds);
                     TournamentLibrary.simTournament(tournament);
                     
                     (uint256 numGroups, uint256 numMatches, uint256 numWinners, uint256 numLosers) = getTournamentStats();
@@ -160,7 +160,7 @@ contract SwissTournamentTest is Test {
     /// Verify that the swiss-advancement logic is working correctly
     function testAdvancement() public {
         // play the matchup between playerId 10 and playerId 160
-        tournament.playNextMatch();
+        tournament.playNextMatch(0, 0, 0, 0);
 
         uint256 winnerId = game.matchup(playerIds[0], playerIds[playerIds.length - 1]);
         assertEq(winnerId != 0, true);

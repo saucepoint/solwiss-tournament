@@ -75,10 +75,10 @@ abstract contract SwissTournament {
     // TODO: YOU SHOULD MODIFY YOUR IMPLEMENTATION WITH advancePlayers() modifier
     // the modifier will ensure the match has not yet been played
     // the modifier will execute your logic and then advance the players to the next group
-    function playMatch(ResultCounter memory group, uint256 matchIndex) public virtual;
+    function playMatch(ResultCounter memory group, uint256 matchIndex) internal virtual;
 
     /// @dev Called by tournament organizers to run the matchups in order
-    function playNextMatch() public {
+    function _playNextMatch() internal {
         require(matchBookHead <= matchBookTail, "Match book is empty");
         MatchId memory matchId = matchBook[matchBookHead];
         playMatch(matchId.group, matchId.matchIndex);
@@ -124,7 +124,7 @@ abstract contract SwissTournament {
         }
     }
 
-    
+
     // //////////////////////////////////
     // ----- View Functions -----
     // //////////////////////////////////

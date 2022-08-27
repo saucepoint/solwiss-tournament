@@ -17,7 +17,7 @@ contract SwissTournamentManagerFactory {
         require(_winThreshold != 0, "Invalid threshold");
         require(_eliminationThreshold != 0, "Invalid threshold");
 
-        bytes memory bytecode = _getCreationByteCodeWithConstructor(_matchResolver, _winThreshold, _eliminationThreshold, _playerIds);
+        bytes memory bytecode = _getCreationByteCodeWithConstructor(msg.sender, _matchResolver, _winThreshold, _eliminationThreshold, _playerIds);
 
         address tournamentAddr;
         bytes32 salt = keccak256(abi.encodePacked(msg.sender, tournamentCounter[msg.sender], _salt));
@@ -34,7 +34,7 @@ contract SwissTournamentManagerFactory {
         return tournamentAddress[creator][tournamentCounter[creator] - 1];
     }
 
-    function _getCreationByteCodeWithConstructor(address _matchResolver, uint256 _winThreshold, uint256 _eliminationThreshold, uint256[] memory _playerIds) private pure returns (bytes memory){
-        return abi.encodePacked(type(SwissTournamentManager).creationCode, abi.encode(_matchResolver, _winThreshold, _eliminationThreshold, _playerIds));
+    function _getCreationByteCodeWithConstructor(address _admin, address _matchResolver, uint256 _winThreshold, uint256 _eliminationThreshold, uint256[] memory _playerIds) private pure returns (bytes memory){
+        return abi.encodePacked(type(SwissTournamentManager).creationCode, abi.encode(_admin, _matchResolver, _winThreshold, _eliminationThreshold, _playerIds));
     }
 }

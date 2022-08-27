@@ -27,11 +27,15 @@ contract SwissTournamentFactoryTest is Test {
         assertEq(tournamentAddr == address(0x0), false);
         vm.stopPrank();
 
-        SwissTournament tournament = SwissTournament(tournamentAddr);
+        SwissTournamentManager tournament = SwissTournamentManager(tournamentAddr);
 
         assertEq(tournamentAddr, factory.getLatestTournament(organizer));
         assertEq(factory.tournamentCounter(organizer), 1);
+
+        assertEq(tournament.isAdmin(organizer), true);
+        vm.startPrank(organizer);
         TournamentLibrary.simTournament(tournament);
+        vm.stopPrank();
         
         // in 16 player 3W/3L there should be 33 matches leading to 8 winners and 8 losers
         (, uint256 numMatches, uint256 numWinners, uint256 numLosers) = TournamentLibrary.getTournamentStats(tournament, playerIds);
