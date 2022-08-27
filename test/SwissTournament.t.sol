@@ -163,6 +163,7 @@ contract SwissTournamentTest is Test {
         tournament.playNextMatch();
 
         uint256 winnerId = game.matchup(playerIds[0], playerIds[playerIds.length - 1]);
+        assertEq(winnerId != 0, true);
         uint256 loserId = winnerId == playerIds[0] ? playerIds[playerIds.length - 1] : playerIds[0];
         
         // verify the scores:

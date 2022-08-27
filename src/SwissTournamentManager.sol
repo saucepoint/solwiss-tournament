@@ -22,10 +22,10 @@ contract SwissTournamentManager is SwissTournament {
         // modifier will validate that the match has not yet been played
         Match storage matchup = matches[group.wins][group.losses][matchIndex];
         
-        // the game logic just needs to return the id (uint256) of the winner
-        // the game logic can accept an arbitrary amount of parameters
-        // however given 2 players, return the id of the winner!
+        // Creating tournaments using the factory assumes that the Game contract adheres to IMatchResolver interface
+        // given two playerIds, return the id of the winner
         uint256 winnerId = matchResolver.matchup(matchup.player0, matchup.player1);
+        require(winnerId != 0, "Winner or playerId cannot be 0");
 
         /// @dev Implementing playMatch() requires you to update the outcome of the match
         matchup.winnerId = winnerId;

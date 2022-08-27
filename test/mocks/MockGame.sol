@@ -8,6 +8,7 @@ import "../../src/interfaces/IMatchResolver.sol";
 /// @notice Demonstrate how an on-chain game can faciliate a Swiss Tournament
 /// @notice You can manage player data here, but just note that Swiss Tournament
 ///         will manage the matchups. It tracks players as uint256 (starting at 1. playerId=0 is not allowed)
+/// @notice In order of MockGame to be compatible with SwissTournamentManager, it needs to implement IMatchResolver interface
 contract MockGame is IMatchResolver {
     function playerScore(uint256 playerId) public pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(playerId)));
