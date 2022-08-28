@@ -57,7 +57,6 @@ There are two ways of creating a SwissTournament:
 
 In either case, the base `SwissTournament` will handle:
     * Advancing players up and down the lattice
-
     * Maintain a first-in-first-out queue of matchups
 
 ## Implementing `SwissTournament` (RYO)
