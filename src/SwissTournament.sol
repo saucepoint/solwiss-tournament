@@ -90,17 +90,17 @@ abstract contract SwissTournament {
     // Must be an even number of players
     // playerId cannot be 0!!!!
     function _newTournament(uint256[] memory playerIds) private {
-        require(0 < playerIds.length && playerIds.length % 2 == 0, "Must have an even number of players");
-        require(playerIds[0] != 0, "PlayerIds cannot be 0");
-        require(playerIds[playerIds.length - 1] != 0, "PlayerIds cannot be 0");
-
-        // initialize the starting group (0 wins, 0 loses)
+        require(0 < playerIds.length && playerIds.length % 2 == 0, "Odd number of players");
         
         // we'll seed the first match manually
         // this is an optimization so we dont have an conditional check
         // for matchBookTail = 0 in `_addMatchToQueue()`
         // Removing the check (which only ever runs once) less gas for all _addMatchToQueue() calls
-        
+
+        // first matchup is being seeded manually, so verify non-zero playerIds        
+        require(playerIds[0] != 0, "PlayerId cannot be 0");
+        require(playerIds[playerIds.length - 1] != 0, "PlayerId cannot be 0");
+
         uint256 matchIndex = groupMatchLength[0][0];
         Match storage nextMatchup = matches[0][0][matchIndex];
         nextMatchup.player0 = playerIds[0];
@@ -207,8 +207,8 @@ abstract contract SwissTournament {
 
         // i could handle this automatically; but i want to be explicit
         // and ensure the implementer is reading carefully :)
-        require(postMatchResult.played, "Match was not set to played=true");
-        require(postMatchResult.winnerId != 0, "Match winner was not set");
+        require(postMatchResult.played, "Matchup did not resolve");
+        require(postMatchResult.winnerId != 0, "Matchup did not resolve");
         
         // update the results of the players
         unchecked {
