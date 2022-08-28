@@ -119,8 +119,8 @@ abstract contract SwissTournament {
             require(player0 != 0, "PlayerId cannot be 0");
             require(player1 != 0, "PlayerId cannot be 0");
             
-            _addPlayerToNextMatch(player0);
-            _addPlayerToNextMatch(player1);
+            _addPlayerToNextMatch(player0, ResultCounter(0, 0));
+            _addPlayerToNextMatch(player1, ResultCounter(0, 0));
             unchecked{ i++; }
         }
     }
@@ -159,8 +159,8 @@ abstract contract SwissTournament {
         matchBook[matchBookTail] = MatchId(group, matchIndex);
     }
 
-    function _addPlayerToNextMatch(uint256 playerId) private {
-        ResultCounter memory result = outcomes[playerId];
+    function _addPlayerToNextMatch(uint256 playerId, ResultCounter memory result) private {
+        // ResultCounter memory result = outcomes[playerId];
         
         // player has completed all possible matches and cannot advance further
         if (result.wins == winnerThreshold) return;
@@ -205,6 +205,7 @@ abstract contract SwissTournament {
         require(postMatchResult.played, "Match was not set to played=true");
         require(postMatchResult.winnerId != 0, "Match winner was not set");
         
+        // update the results of the players
         unchecked {
             if (postMatchResult.winnerId == postMatchResult.player0) {
                 outcomes[postMatchResult.player0].wins++;
@@ -215,7 +216,7 @@ abstract contract SwissTournament {
             }
         }
 
-        _addPlayerToNextMatch(postMatchResult.player0);
-        _addPlayerToNextMatch(postMatchResult.player1);
+        _addPlayerToNextMatch(postMatchResult.player0, outcomes[postMatchResult.player0]);
+        _addPlayerToNextMatch(postMatchResult.player1, outcomes[postMatchResult.player1]);
     }
 }
