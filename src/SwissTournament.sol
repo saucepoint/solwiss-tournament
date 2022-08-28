@@ -106,7 +106,8 @@ abstract contract SwissTournament {
         nextMatchup.player0 = playerIds[0];
         nextMatchup.player1 = playerIds[playerIds.length - 1];
         unchecked { groupMatchLength[0][0]++; }
-        matchBook[matchBookTail] = MatchId(ResultCounter(0, 0), matchIndex);
+        ResultCounter memory zeroPair;
+        matchBook[matchBookTail] = MatchId(zeroPair, matchIndex);
         
         // assign the remaining matchups i.e. indexes (1, 14) (2, 13) (3, 12) (4, 11) (5, 10) (6, 9) (7, 8)
         uint256 i = 1;
@@ -119,8 +120,8 @@ abstract contract SwissTournament {
             require(player0 != 0, "PlayerId cannot be 0");
             require(player1 != 0, "PlayerId cannot be 0");
             
-            _addPlayerToNextMatch(player0, ResultCounter(0, 0));
-            _addPlayerToNextMatch(player1, ResultCounter(0, 0));
+            _addPlayerToNextMatch(player0, zeroPair);
+            _addPlayerToNextMatch(player1, zeroPair);
             unchecked{ i++; }
         }
     }
@@ -159,9 +160,7 @@ abstract contract SwissTournament {
         matchBook[matchBookTail] = MatchId(group, matchIndex);
     }
 
-    function _addPlayerToNextMatch(uint256 playerId, ResultCounter memory result) private {
-        // ResultCounter memory result = outcomes[playerId];
-        
+    function _addPlayerToNextMatch(uint256 playerId, ResultCounter memory result) private {        
         // player has completed all possible matches and cannot advance further
         if (result.wins == winnerThreshold) return;
         if (result.losses == eliminationThreshold) return;
@@ -194,10 +193,14 @@ abstract contract SwissTournament {
     // also reads the outcome of the matchup and advances the players to the next group
     modifier advancePlayers(ResultCounter memory group, uint256 matchIndex) {
         Match storage matchup = matches[group.wins][group.losses][matchIndex];
+
+        // player has no opponent
         if (matchup.player1 == 0) return;
         require(!matchup.played, "Match has already been played");
+        
         // play the match
         _;
+        
         Match storage postMatchResult = matches[group.wins][group.losses][matchIndex];
 
         // i could handle this automatically; but i want to be explicit
