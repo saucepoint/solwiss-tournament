@@ -82,7 +82,7 @@ abstract contract SwissTournament {
         require(matchBookHead <= matchBookTail, "Match book is empty");
         MatchId memory matchId = matchBook[matchBookHead];
         playMatch(matchId.group, matchId.matchIndex);
-        matchBookHead++;
+        unchecked { matchBookHead++; }
     }
 
     // ordered list of players by elo
@@ -205,12 +205,14 @@ abstract contract SwissTournament {
         require(postMatchResult.played, "Match was not set to played=true");
         require(postMatchResult.winnerId != 0, "Match winner was not set");
         
-        if (postMatchResult.winnerId == postMatchResult.player0) {
-            outcomes[postMatchResult.player0].wins++;
-            outcomes[postMatchResult.player1].losses++;
-        } else {
-            outcomes[postMatchResult.player0].losses++;
-            outcomes[postMatchResult.player1].wins++;
+        unchecked {
+            if (postMatchResult.winnerId == postMatchResult.player0) {
+                outcomes[postMatchResult.player0].wins++;
+                outcomes[postMatchResult.player1].losses++;
+            } else {
+                outcomes[postMatchResult.player0].losses++;
+                outcomes[postMatchResult.player1].wins++;
+            }
         }
 
         _addPlayerToNextMatch(postMatchResult.player0);
