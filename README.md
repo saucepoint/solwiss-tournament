@@ -1,15 +1,6 @@
-# Woah there, anon! Thanks for snooping but
-*repo is not ready yet; feel free to poke around though* 😘
-
-I'm welcoming improvements and suggestions. Open up an issue or [DM me on twitter](https://twitter.com/saucepoint)
-
-You can find the outstanding work below
-
----
-
 # solwiss-tournament
 
-Inspired by [0xMonaco](https://0xmonaco.ctf.paradigm.xyz/) & the future of chain-facilitated PvP games, I created a reference implementation for a Swiss tournament manager in Solidity
+Inspired by [0xMonaco](https://0xmonaco.ctf.paradigm.xyz/) & the future of chain-facilitated PvP games, I created a reference implementation for a Swiss tournament manager in Solidity.
 
 ([Wikipedia](https://en.wikipedia.org/wiki/Swiss-system_tournament)) 
 
@@ -41,8 +32,6 @@ Please see [Example Configuration](#example-configurations) for possible outcome
 
 ## This is a **reference implementation** with stuff still being worked on:
 
-* Permissioned functions. Current functions are unprotected. Eventually only 'tournament organizers' will have permission to run matches
-
 * Gas optimizations
 
 * Haven't really thought of reentrancy bugs, so there's probably something out there
@@ -73,22 +62,22 @@ In either case, the base `SwissTournament` will handle:
 
 ## Implementing `SwissTournament` (RYO)
 
-Please see [MockGameSwissTournament.sol](test/mocks//MockGameSwissTournament.sol) for additional context
-
 ```typescript
 /// >> Inherit `SwissTournament`
 contract MockGameSwissTournament is SwissTournament {
+    // optionally define state variables required for permission access
 
-    constructor(uint256 _winThreshold, uint256 _eliminationThreshold)
-        SwissTournament(_winThreshold, _eliminationThreshold)
+    constructor(uint256 _winThreshold, uint256 _eliminationThreshold, uint256[] memory playerIds)
+        SwissTournament(_winThreshold, _eliminationThreshold, playerIds)
     {
-        // either in the constructor, or after deploy, seed the tournament with:
-        // newTournament(uint256[] playerIds);
+        // additional constructor logic such as
+        // setting initial admin permissions
+        // or attaching a Game contract
     }
     
     /// >> Implement playMatch() function body to adhere to SwissTournament
     /// >> Must decorate it with advancePlayers() modifier
-    function playMatch(ResultCounter memory group, uint256 matchIndex) public override advancePlayers(group, matchIndex) {
+    function playMatch(ResultCounter memory group, uint256 matchIndex) internal override advancePlayers(group, matchIndex) {
         
         /// >> Provides information on which players (uint256s) are participating in the matchup
         Match storage matchup = matches[group.wins][group.losses][matchIndex];
@@ -99,6 +88,15 @@ contract MockGameSwissTournament is SwissTournament {
         /// >> update the outcome of the match
         matchup.winnerId = winnerId;
         matchup.played = true;
+
+        // the advancePlayers() modifier will handle advancing the players to the next group
+    }
+
+    /// Main entry point for running matchups
+    /// Should call SwissTournmanent._playNextMatch()
+    /// Optionally add permissions logic
+    function playNextMatch() {
+        _playNextMatch();
     }
 }
 ```
@@ -110,6 +108,11 @@ SwissTournamentManagerFactory.sol handles:
 * Creation of a tournament manager (SwissTournamentManager)
     * SwissTournamentManager will call your Game contract's `.matchup(uint256,uint256)`
     * i.e. your game contract must adhere to `IMatchResolver.sol` interface
+    * The creator of the contract will have tournament-admin permissions
+        * allows the addition of admins
+        * allows the setting of `tournament.adminSigner()`
+        * admins can call `playNextMatch()` without a valid signature
+        * users/players can call `playNextMatch()` using a signed message from `tournament.adminSigner()`
 
 So all you need to do is call `playNextMatch()`
 ```typescript
@@ -158,9 +161,14 @@ const newTournamentAddress = tournamentCreatorContract.create(
 // get the tournament contract
 const tournament = new ethers.Contract(newTournamentAddress, stm.abi, provider);
 
+// add some extra tournament organizers, if necessary
+// tournament.addTournamentAdmin("0xNEW_ADMIN");
+
 // Execute the entire tournament
 while (tournament.matchBookHead() <= contract.matchBookTail()){
-    tournament.playNextMatch();
+    // tournament admins do not need to provide valid signatures
+    // non-admins will need to provide a signature signed by tournament.adminSigner()
+    tournament.playNextMatch(0, 0, 0, 0);
 }
 ```
 
@@ -280,3 +288,7 @@ Note: with high `win_thresholds`, it is not guaranteed that a "winner" has met t
 
 ## Glossary
 TBD
+
+---
+
+I'm welcoming improvements and suggestions. Open up an issue or [DM me on twitter](https://twitter.com/saucepoint)
