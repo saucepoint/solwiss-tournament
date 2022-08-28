@@ -18,7 +18,6 @@ contract SwissTournamentManager is SwissTournament {
     {
         matchResolver = IMatchResolver(_matchResolver);
         isAdmin[admin] = true;
-        isAdmin[msg.sender] = true;
     }
 
     /// Implement SwissTournament.playMatch()
