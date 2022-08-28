@@ -14,8 +14,8 @@ struct Match {
 // Defines a group (based on win/loss count)
 // Also used for tracking a player's results (which determines which group they are in)
 struct ResultCounter {
-    uint256 wins;
-    uint256 losses;
+    uint128 wins;
+    uint128 losses;
 }
 
 // helper struct for accessing a unique match
@@ -28,19 +28,27 @@ struct MatchId {
 /// @author @saucepoint <saucepoint@protonmail.com>
 /// @notice Create & manage a Swiss Tournament. Handles multiple tournaments
 abstract contract SwissTournament {
+    // tracks the head and the tail of the match book for monotonic traversal
+    // these values track the head and tail of `matchBook` (mapping above)
+    // i.e. traverse for upcoming to-be-played matches
+    // indexer value for `matchBook`
+    uint256 public matchBookHead;
+    uint256 public matchBookTail;
+    uint256 public numPlayers;
+
+    // TODO: what happens when the win condition is higher? what does the swiss lattice look like?
+    // typically both are the same
+    uint128 public winnerThreshold;  // number of wins required to "win" or "advance into playoffs"
+    uint128 public eliminationThreshold;  // number of losses suffered to be eliminated
+
     // Groups are identified via win count / lose count
     // Matches within a group are identified via an index
     // therefore a unique 'match id' is the composite of win-count, lose-count, and match index
     // win count => lose count => match index => Match
-    mapping(uint256 => mapping(uint256 => mapping(uint256 => Match))) public matches;
+    mapping(uint128 => mapping(uint128 => mapping(uint256 => Match))) public matches;
 
     // win count => lose count => number of matches in this group
-    mapping(uint256 => mapping(uint256 => uint256)) public groupMatchLength;
-
-    // TODO: what happens when the win condition is higher? what does the swiss lattice look like?
-    // typically both are the same
-    uint256 public winnerThreshold;  // number of wins required to "win" or "advance into playoffs"
-    uint256 public eliminationThreshold;  // number of losses suffered to be eliminated
+    mapping(uint128 => mapping(uint128 => uint256)) public groupMatchLength;
     
     // playerId => current scores
     mapping(uint256 => ResultCounter) public outcomes;
@@ -50,15 +58,7 @@ abstract contract SwissTournament {
     // match order number => Match information
     mapping(uint256 => MatchId) public matchBook;
 
-    // tracks the head and the tail of the match book for monotonic traversal
-    // these values track the head and tail of `matchBook` (mapping above)
-    // i.e. traverse for upcoming to-be-played matches
-    // indexer value for `matchBook`
-    uint256 public matchBookHead;
-    uint256 public matchBookTail;
-    uint256 public numPlayers;
-
-    constructor(uint256 _winThreshold, uint256 _eliminationThreshold, uint256[] memory _playerIds) {
+    constructor(uint128 _winThreshold, uint128 _eliminationThreshold, uint256[] memory _playerIds) {
         winnerThreshold = _winThreshold;
         eliminationThreshold = _eliminationThreshold;
         numPlayers = _playerIds.length;
@@ -135,7 +135,7 @@ abstract contract SwissTournament {
     
     // TODO: for some reason tests didnt have access to implicit getters. look into why?
     // i.e. tournament.match(uint256,uin256, uin256) -> Match
-    function getMatch(uint256 wins, uint256 losses, uint256 matchIndex) public view returns (Match memory) {
+    function getMatch(uint128 wins, uint128 losses, uint256 matchIndex) public view returns (Match memory) {
         return matches[wins][losses][matchIndex];
     }
 

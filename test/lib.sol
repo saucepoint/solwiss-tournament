@@ -20,8 +20,8 @@ library TournamentLibrary {
     }
 
     function getTournamentStats(SwissTournament tournament, uint256[] memory playerIds) public view returns (uint256 numGroups, uint256 numMatches, uint256 numWinners, uint256 numLosers) {
-        for (uint256 wins=0; wins <= tournament.winnerThreshold(); wins++) {
-            for (uint256 losses=0; losses <= tournament.eliminationThreshold(); losses++) {
+        for (uint128 wins=0; wins <= tournament.winnerThreshold(); wins++) {
+            for (uint128 losses=0; losses <= tournament.eliminationThreshold(); losses++) {
                 uint256 len = tournament.groupMatchLength(wins, losses);
                 if (0 < len) {
                     numGroups++;

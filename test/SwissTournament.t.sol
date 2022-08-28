@@ -76,8 +76,8 @@ contract SwissTournamentTest is Test {
     /// Useful for discovering optimal parameters of a tournament
     function testTournamentGroupLog() public {
         uint256 NUM_PLAYERS = 32;
-        uint256 WIN_THRESHOLD = 3;
-        uint256 ELIMINATION_THRESHOLD = 3;
+        uint128 WIN_THRESHOLD = 3;
+        uint128 ELIMINATION_THRESHOLD = 3;
 
         playerIds = TournamentLibrary.getPlayerIds(NUM_PLAYERS);
         tournament = new SwissTournamentManager(organizer, address(game), WIN_THRESHOLD, ELIMINATION_THRESHOLD, playerIds);
@@ -88,8 +88,8 @@ contract SwissTournamentTest is Test {
         // Log results to a file
         string memory filepath = string.concat("logs/", vm.toString(address(tournament)), ".txt");
         vm.writeFile(filepath, "Groups\n");
-        for (uint256 wins=0; wins <= tournament.winnerThreshold(); wins++) {
-            for (uint256 losses=0; losses <= tournament.eliminationThreshold(); losses++) {
+        for (uint128 wins=0; wins <= tournament.winnerThreshold(); wins++) {
+            for (uint128 losses=0; losses <= tournament.eliminationThreshold(); losses++) {
                 uint256 len = tournament.groupMatchLength(wins, losses);
                 if (len == 0) continue;
                 vm.writeLine(
@@ -132,8 +132,8 @@ contract SwissTournamentTest is Test {
         uint256 maxWins = 12;
         uint256 maxLosses = 5;
         for (uint256 i; i < numPlayers.length; i++) {
-            for (uint256 winThreshold = 3; winThreshold <= maxWins; winThreshold++) {
-                for (uint256 lossThreshold = 3; lossThreshold <= maxLosses; lossThreshold++) {
+            for (uint128 winThreshold = 3; winThreshold <= maxWins; winThreshold++) {
+                for (uint128 lossThreshold = 3; lossThreshold <= maxLosses; lossThreshold++) {
                     // create a new tournament and simulate its entirety
                     playerIds = TournamentLibrary.getPlayerIds(numPlayers[i]);
                     tournament = new SwissTournamentManager(organizer, address(game), winThreshold, lossThreshold, playerIds);
@@ -192,8 +192,8 @@ contract SwissTournamentTest is Test {
     
     // ------ Helper Functions ------
     function getTournamentStats() public view returns (uint256 numGroups, uint256 numMatches, uint256 numWinners, uint256 numLosers) {
-        for (uint256 wins=0; wins <= tournament.winnerThreshold(); wins++) {
-            for (uint256 losses=0; losses <= tournament.eliminationThreshold(); losses++) {
+        for (uint128 wins=0; wins <= tournament.winnerThreshold(); wins++) {
+            for (uint128 losses=0; losses <= tournament.eliminationThreshold(); losses++) {
                 uint256 len = tournament.groupMatchLength(wins, losses);
                 if (0 < len) {
                     numGroups++;
