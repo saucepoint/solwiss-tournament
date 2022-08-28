@@ -113,7 +113,7 @@ abstract contract SwissTournament {
         uint256 half = playerIds.length / 2;
         uint256 player0;
         uint256 player1;
-        for (i; i < half; i++) {
+        for (i; i < half;) {
             player0 = playerIds[i];
             player1 = playerIds[playerIds.length - 1 - i];
             require(player0 != 0, "PlayerId cannot be 0");
@@ -121,6 +121,7 @@ abstract contract SwissTournament {
             
             _addPlayerToNextMatch(player0);
             _addPlayerToNextMatch(player1);
+            unchecked{ i++; }
         }
     }
 
