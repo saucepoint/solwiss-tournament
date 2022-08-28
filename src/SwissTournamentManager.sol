@@ -13,7 +13,7 @@ contract SwissTournamentManager is SwissTournament {
     address public adminSigner;
     IMatchResolver matchResolver;
 
-    constructor(address admin, address _matchResolver, uint256 _winThreshold, uint256 _eliminationThreshold, uint256[] memory playerIds)
+    constructor(address admin, address _matchResolver, uint128 _winThreshold, uint128 _eliminationThreshold, uint256[] memory playerIds)
         SwissTournament(_winThreshold, _eliminationThreshold, playerIds)
     {
         matchResolver = IMatchResolver(_matchResolver);
