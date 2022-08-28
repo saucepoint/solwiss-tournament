@@ -167,7 +167,9 @@ abstract contract SwissTournament {
         
         uint256 matchIndex = groupMatchLength[result.wins][result.losses];
         Match storage nextMatchup = matches[result.wins][result.losses][matchIndex];
-        require(nextMatchup.played == false, "match already played");
+        
+        // kind of useful to have, but tests prove we are not overwriting matches
+        // require(nextMatchup.played == false, "match already played");
         
         // next matchup does not have a player0
         if (nextMatchup.player0 == 0) {
