@@ -13,13 +13,14 @@ contract SwissTournamentTest is Test {
     IMatchResolver game;
     SwissTournamentManager tournament;
     uint256[] playerIds;
+    address organizer = address(0x00DEADBEEF);
     
     function setUp() public {
         MockGame mockGame = new MockGame();
         game = IMatchResolver(address(mockGame));
 
         playerIds = TournamentLibrary.getPlayerIds(16);
-        tournament = new SwissTournamentManager(address(game), 3, 3, playerIds);
+        tournament = new SwissTournamentManager(organizer, address(game), 3, 3, playerIds);
     }
 
     /// Verify the first set of matchups were setup correctly
@@ -55,22 +56,20 @@ contract SwissTournamentTest is Test {
         // i dont know if theres a math formula for this. i just counted the matches
 
         // make sure theres no errors
+        vm.startPrank(organizer);
         for (uint256 i = 0; i < 33; i++) {
-            tournament.playNextMatch();
+            tournament.playNextMatch(0, 0, 0, 0);
         }
+        vm.stopPrank();
 
         // loop over the 16 players. there should be 8 winners, and 8 losers
         // confirms we arent double counting winners or losers
-        // TODO: use helper function
-        uint256 winners;
-        uint256 losers;
-        bool out;
-        for (uint256 i = 0; i < playerIds.length; i++) {
-            out = tournament.eliminated(playerIds[i]);
-            out ? losers++ : winners++;
-        }
-        assertEq(winners, 8);
-        assertEq(losers, 8);
+        // in 16 player 3W/3L there should be 33 matches leading to 8 winners and 8 losers
+        SwissTournament _tournament = SwissTournament(address(tournament));
+        (, uint256 numMatches, uint256 numWinners, uint256 numLosers) = TournamentLibrary.getTournamentStats(_tournament, playerIds);
+        assertEq(numMatches, 33);
+        assertEq(numWinners, 8);
+        assertEq(numLosers, 8);
     }
 
     /// Logs the matchups & groupings for an entire tournament
@@ -81,8 +80,10 @@ contract SwissTournamentTest is Test {
         uint256 ELIMINATION_THRESHOLD = 3;
 
         playerIds = TournamentLibrary.getPlayerIds(NUM_PLAYERS);
-        tournament = new SwissTournamentManager(address(game), WIN_THRESHOLD, ELIMINATION_THRESHOLD, playerIds);
+        tournament = new SwissTournamentManager(organizer, address(game), WIN_THRESHOLD, ELIMINATION_THRESHOLD, playerIds);
+        vm.startPrank(organizer);
         TournamentLibrary.simTournament(tournament);
+        vm.stopPrank();
 
         // Log results to a file
         string memory filepath = string.concat("logs/", vm.toString(address(tournament)), ".txt");
@@ -135,8 +136,11 @@ contract SwissTournamentTest is Test {
                 for (uint256 lossThreshold = 3; lossThreshold <= maxLosses; lossThreshold++) {
                     // create a new tournament and simulate its entirety
                     playerIds = TournamentLibrary.getPlayerIds(numPlayers[i]);
-                    tournament = new SwissTournamentManager(address(game), winThreshold, lossThreshold, playerIds);
+                    tournament = new SwissTournamentManager(organizer, address(game), winThreshold, lossThreshold, playerIds);
+
+                    vm.startPrank(organizer);
                     TournamentLibrary.simTournament(tournament);
+                    vm.stopPrank();
                     
                     (uint256 numGroups, uint256 numMatches, uint256 numWinners, uint256 numLosers) = getTournamentStats();
                     vm.writeLine(
@@ -160,7 +164,8 @@ contract SwissTournamentTest is Test {
     /// Verify that the swiss-advancement logic is working correctly
     function testAdvancement() public {
         // play the matchup between playerId 10 and playerId 160
-        tournament.playNextMatch();
+        vm.prank(organizer);
+        tournament.playNextMatch(0, 0, 0, 0);
 
         uint256 winnerId = game.matchup(playerIds[0], playerIds[playerIds.length - 1]);
         assertEq(winnerId != 0, true);

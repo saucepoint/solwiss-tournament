@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 import "../src/SwissTournament.sol";
+import "../src/SwissTournamentManager.sol";
 
 library TournamentLibrary {
-    function simTournament(SwissTournament tournament) internal {
+    function simTournament(SwissTournamentManager tournament) internal {
         while (tournament.matchBookHead() <= tournament.matchBookTail()) {
-            tournament.playNextMatch();
+            tournament.playNextMatch(0,0,0,0);
         }
     }
 
