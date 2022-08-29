@@ -12,7 +12,7 @@ import "../src/SwissTournamentManager.sol";
 contract SwissTournamentTest is Test {
     IMatchResolver game;
     SwissTournamentManager tournament;
-    uint256[] playerIds;
+    uint64[] playerIds;
     address organizer = address(0x00DEADBEEF);
     
     function setUp() public {
@@ -75,7 +75,7 @@ contract SwissTournamentTest is Test {
     /// Logs the matchups & groupings for an entire tournament
     /// Useful for discovering optimal parameters of a tournament
     function testTournamentGroupLog() public {
-        uint256 NUM_PLAYERS = 32;
+        uint16 NUM_PLAYERS = 32;
         uint128 WIN_THRESHOLD = 3;
         uint128 ELIMINATION_THRESHOLD = 3;
 
@@ -127,11 +127,11 @@ contract SwissTournamentTest is Test {
         string memory filepath = string.concat("logs/", "tournamentCombinations.csv");
         vm.writeFile(filepath, "num_players,win_threshold,lose_threshold,num_groups,num_matches,num_winners,num_losers\n");
 
-        uint256[9] memory numPlayers = [uint256(8), uint256(16), uint256(20), uint256(32), uint256(40), uint256(64), uint256(100), uint256(128), uint256(256)];
+        uint16[9] memory numPlayers = [uint16(8), uint16(16), uint16(20), uint16(32), uint16(40), uint16(64), uint16(100), uint16(128), uint16(256)];
 
         uint256 maxWins = 12;
         uint256 maxLosses = 5;
-        for (uint256 i; i < numPlayers.length; i++) {
+        for (uint64 i; i < numPlayers.length; i++) {
             for (uint128 winThreshold = 3; winThreshold <= maxWins; winThreshold++) {
                 for (uint128 lossThreshold = 3; lossThreshold <= maxLosses; lossThreshold++) {
                     // create a new tournament and simulate its entirety
@@ -202,7 +202,7 @@ contract SwissTournamentTest is Test {
             }
         }
         bool out;
-        for (uint256 i = 0; i < playerIds.length; i++) {
+        for (uint64 i = 0; i < playerIds.length; i++) {
             out = tournament.eliminated(playerIds[i]);
             out ? numLosers++ : numWinners++;
         }

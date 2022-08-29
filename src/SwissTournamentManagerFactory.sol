@@ -13,7 +13,7 @@ contract SwissTournamentManagerFactory {
 
     event TournamentCreated(address organizer, uint256 tournamentId, address tournament);
 
-    function create(address _matchResolver, uint256 _winThreshold, uint256 _eliminationThreshold, uint256[] calldata _playerIds, uint256 _salt) public returns (address) {
+    function create(address _matchResolver, uint256 _winThreshold, uint256 _eliminationThreshold, uint64[] calldata _playerIds, uint256 _salt) public returns (address) {
         require(_winThreshold != 0, "Invalid threshold");
         require(_eliminationThreshold != 0, "Invalid threshold");
 
@@ -34,7 +34,7 @@ contract SwissTournamentManagerFactory {
         return tournamentAddress[creator][tournamentCounter[creator] - 1];
     }
 
-    function _getCreationByteCodeWithConstructor(address _admin, address _matchResolver, uint256 _winThreshold, uint256 _eliminationThreshold, uint256[] memory _playerIds) private pure returns (bytes memory){
+    function _getCreationByteCodeWithConstructor(address _admin, address _matchResolver, uint256 _winThreshold, uint256 _eliminationThreshold, uint64[] memory _playerIds) private pure returns (bytes memory){
         return abi.encodePacked(type(SwissTournamentManager).creationCode, abi.encode(_admin, _matchResolver, _winThreshold, _eliminationThreshold, _playerIds));
     }
 }

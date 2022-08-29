@@ -19,7 +19,7 @@ contract SwissTournamentFactoryTest is Test {
     function testCreate() public {
         address organizer = address(0x00DEADBEEF);
         uint256 tournamentId = factory.tournamentCounter(organizer);
-        uint256[] memory playerIds = TournamentLibrary.getPlayerIds(16);
+        uint64[] memory playerIds = TournamentLibrary.getPlayerIds(16);
 
         vm.startPrank(organizer);
         address tournamentAddr = factory.create(address(game), 3, 3, playerIds, 0);
@@ -47,7 +47,7 @@ contract SwissTournamentFactoryTest is Test {
     function testSignaturePermission() public {
         address organizer = address(0x00DEADBEEF);
         uint256 tournamentId = factory.tournamentCounter(organizer);
-        uint256[] memory playerIds = TournamentLibrary.getPlayerIds(16);
+        uint64[] memory playerIds = TournamentLibrary.getPlayerIds(16);
 
         vm.startPrank(organizer);
         address tournamentAddr = factory.create(address(game), 3, 3, playerIds, 0);
@@ -78,7 +78,7 @@ contract SwissTournamentFactoryTest is Test {
     function testSignaturePermissionFail() public {
         address organizer = address(0x00DEADBEEF);
         uint256 tournamentId = factory.tournamentCounter(organizer);
-        uint256[] memory playerIds = TournamentLibrary.getPlayerIds(16);
+        uint64[] memory playerIds = TournamentLibrary.getPlayerIds(16);
 
         vm.startPrank(organizer);
         address tournamentAddr = factory.create(address(game), 3, 3, playerIds, 0);
