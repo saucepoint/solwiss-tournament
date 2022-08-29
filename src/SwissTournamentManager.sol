@@ -13,7 +13,7 @@ contract SwissTournamentManager is SwissTournament {
     address public adminSigner;
     IMatchResolver matchResolver;
 
-    constructor(address admin, address _matchResolver, uint128 _winThreshold, uint128 _eliminationThreshold, uint256[] memory playerIds)
+    constructor(address admin, address _matchResolver, uint128 _winThreshold, uint128 _eliminationThreshold, uint64[] memory playerIds)
         SwissTournament(_winThreshold, _eliminationThreshold, playerIds)
     {
         matchResolver = IMatchResolver(_matchResolver);
@@ -28,7 +28,7 @@ contract SwissTournamentManager is SwissTournament {
         
         // Creating tournaments using the factory assumes that the Game contract adheres to IMatchResolver interface
         // given two playerIds, return the id of the winner
-        uint256 winnerId = matchResolver.matchup(matchup.player0, matchup.player1);
+        uint64 winnerId = matchResolver.matchup(matchup.player0, matchup.player1);
         require(winnerId != 0, "Winner or playerId cannot be 0");
 
         /// @dev Implementing playMatch() requires you to update the outcome of the match

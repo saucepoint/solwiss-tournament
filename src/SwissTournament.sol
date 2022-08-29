@@ -5,24 +5,24 @@ pragma solidity ^0.8.13;
 // Mappings / structs will default to 0, 
 // we dont want mistake a default 0 as a player or a result!
 struct Match {
-    uint256 player0;   // playerIds are 1-indexed
-    uint256 player1;   // playerIds are 1-indexed
-    uint256 winnerId;  // 0 no winner, otherwise is assigned to a playerId
+    uint64 player0;   // playerIds are 1-indexed
+    uint64 player1;   // playerIds are 1-indexed
+    uint64 winnerId;  // 0 no winner, otherwise is assigned to a playerId
     bool played;       // true if match has been played
 }
 
 // Defines a group (based on win/loss count)
 // Also used for tracking a player's results (which determines which group they are in)
 struct ResultCounter {
-    uint128 wins;
-    uint128 losses;
-}
+    uint64 wins;
+    uint64 losses;
+}//16bytes
 
 // helper struct for accessing a unique match
 struct MatchId {
     ResultCounter group;
-    uint256 matchIndex;
-}
+    uint128 matchIndex;
+}//32bytes
 
 /// @title Swiss Tournament Manager
 /// @author @saucepoint <saucepoint@protonmail.com>
@@ -34,7 +34,7 @@ abstract contract SwissTournament {
     // indexer value for `matchBook`
     uint256 public matchBookHead;
     uint256 public matchBookTail;
-    uint256 public numPlayers;
+    uint16 public numPlayers;
 
     // TODO: what happens when the win condition is higher? what does the swiss lattice look like?
     // typically both are the same
@@ -48,7 +48,7 @@ abstract contract SwissTournament {
     mapping(uint128 => mapping(uint128 => mapping(uint256 => Match))) public matches;
 
     // win count => lose count => number of matches in this group
-    mapping(uint128 => mapping(uint128 => uint256)) public groupMatchLength;
+    mapping(uint128 => mapping(uint128 => uint128)) public groupMatchLength;
     
     // playerId => current scores
     mapping(uint256 => ResultCounter) public outcomes;
@@ -58,10 +58,10 @@ abstract contract SwissTournament {
     // match order number => Match information
     mapping(uint256 => MatchId) public matchBook;
 
-    constructor(uint128 _winThreshold, uint128 _eliminationThreshold, uint256[] memory _playerIds) {
+    constructor(uint128 _winThreshold, uint128 _eliminationThreshold, uint64[] memory _playerIds) {
         winnerThreshold = _winThreshold;
         eliminationThreshold = _eliminationThreshold;
-        numPlayers = _playerIds.length;
+        numPlayers = uint16(_playerIds.length);
         _newTournament(_playerIds);
     }
 
@@ -89,7 +89,7 @@ abstract contract SwissTournament {
     // playerIds[0] is matched against playerIds[playerIds.length - 1]
     // Must be an even number of players
     // playerId cannot be 0!!!!
-    function _newTournament(uint256[] memory playerIds) private {
+    function _newTournament(uint64[] memory playerIds) private {
         require(0 < playerIds.length && playerIds.length % 2 == 0, "Odd number of players");
         
         // we'll seed the first match manually
@@ -101,7 +101,7 @@ abstract contract SwissTournament {
         require(playerIds[0] != 0, "PlayerId cannot be 0");
         require(playerIds[playerIds.length - 1] != 0, "PlayerId cannot be 0");
 
-        uint256 matchIndex = groupMatchLength[0][0];
+        uint128 matchIndex = groupMatchLength[0][0];
         Match storage nextMatchup = matches[0][0][matchIndex];
         nextMatchup.player0 = playerIds[0];
         nextMatchup.player1 = playerIds[playerIds.length - 1];
@@ -112,8 +112,8 @@ abstract contract SwissTournament {
         // assign the remaining matchups i.e. indexes (1, 14) (2, 13) (3, 12) (4, 11) (5, 10) (6, 9) (7, 8)
         uint256 i = 1;
         uint256 half = playerIds.length / 2;
-        uint256 player0;
-        uint256 player1;
+        uint64 player0;
+        uint64 player1;
         for (i; i < half;) {
             player0 = playerIds[i];
             player1 = playerIds[playerIds.length - 1 - i];
@@ -155,17 +155,17 @@ abstract contract SwissTournament {
     // ----- Private Functions -----
     // //////////////////////////////////
 
-    function _addMatchToQueue(ResultCounter memory group, uint256 matchIndex) private {
+    function _addMatchToQueue(ResultCounter memory group, uint128 matchIndex) private {
         unchecked { matchBookTail++; }
         matchBook[matchBookTail] = MatchId(group, matchIndex);
     }
 
-    function _addPlayerToNextMatch(uint256 playerId, ResultCounter memory result) private {        
+    function _addPlayerToNextMatch(uint64 playerId, ResultCounter memory result) private {        
         // player has completed all possible matches and cannot advance further
         if (result.wins == winnerThreshold) return;
         if (result.losses == eliminationThreshold) return;
         
-        uint256 matchIndex = groupMatchLength[result.wins][result.losses];
+        uint128 matchIndex = groupMatchLength[result.wins][result.losses];
         Match storage nextMatchup = matches[result.wins][result.losses][matchIndex];
         
         // kind of useful to have, but tests prove we are not overwriting matches

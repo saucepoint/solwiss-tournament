@@ -6,5 +6,5 @@ pragma solidity ^0.8.13;
 interface IMatchResolver {
     // Given two player IDs, return the ID of the winner
     // Cannot return 0
-    function matchup(uint256 player0, uint256 player1) external view returns (uint256);
+    function matchup(uint64 player0, uint64 player1) external view returns (uint64);
 }
