@@ -1,5 +1,6 @@
 out
 cache
 logs
+broadcast
 .env
 .DS_Store
