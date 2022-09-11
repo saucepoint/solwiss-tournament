@@ -179,7 +179,15 @@ Lastly, check out [ISwissTournament](src/interfaces/ISwissTournament.sol) for vi
 
 ---
 
+## Deployment History
+
+* [Polygon Mumbai](deployments/polygon-mumbai.md)
+
+--
+
 ## Example Configurations
+
+Use this table to determine optimal parameters for your Swiss Tournament.
 
 Pruned Results from [SwissTournament.t.sol:testGenerateCombinations()](test/SwissTournament.t.sol)
 
